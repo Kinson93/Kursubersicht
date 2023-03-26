@@ -1,0 +1,69 @@
+<?php 
+	global $wpdb;                         //Zugriff auf Datenbank
+	if (isset($_POST['delete_row'])) {    //Löschen von Zeile mit der passenden ID aus der Tabelle, falls das Formular 'delete_row' gesendet wird
+		$id = $_POST['row_id'];
+		$wpdb->delete('cfb_tablesome_table_2129', array('id' => $id));		
+	}
+	$order_by = isset($_GET['order_by']) ? $_GET['order_by'] : 'column_1'; // Standard-Sortierung nach Spalte "Kurs"
+	$order = isset($_GET['order']) ? $_GET['order'] : 'asc';               // Standard-Aufsteigende Sortierung
+	$result = $wpdb->get_results ("SELECT * FROM `cfb_tablesome_table_2129` ORDER BY {$order_by} {$order}"); //Abfrage von Daten aus Tabelle 2129
+?>
+
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th><a href="?order_by=column_1&order=<?php echo $order == 'asc' ? 'desc' : 'asc'; ?>">Kurs</a></th> 
+			<th>Startdatum-Enddatum</th>
+			<th>Kommentar</th>
+			<th>Löschen</th>
+			<th>Bearbeiten</th>
+			<th>Kurstermine</th>
+			<th>Kursanmeldungen</th>
+		</tr>
+	</thead>
+	<tbody>
+
+		<?php foreach ($result as $kurs) { ?>
+			<tr>
+				<td><?php echo $kurs->column_1; ?> <!-- Ausgabe Kursname-->
+				</td>
+				<td><?php
+   					 $dates = array();
+   					 for ($i = 2; $i <= 9; $i++) {
+     				   $column_name = 'column_' . $i;                    
+      					 	 if (!empty($kurs->$column_name)) {
+       				    	 $dates[] = $kurs->$column_name;          //erstellen eines Arrays mit allen nicht leeren Daten
+   	   				 			}
+   					}
+  					if (!empty($dates)) {
+        				$highest_date = max(array_map('strtotime', $dates));
+       					$lowest_date = min(array_map('strtotime', $dates));
+        			echo date('d.m.Y', $lowest_date) . ' - ' . date('d.m.Y', $highest_date); //Ausgabe vom frühesten und spätesten Datum
+    	   			}
+				?> 
+				</td>
+				<td><?php echo $kurs->column_10; ?>&nbsp;  <!-- Ausgabe Kommentar-->
+				</td>
+				<td>
+					<form method="post" onsubmit="return confirm('Wirklich löschen?');">
+   						<input type="hidden" name="row_id" value="<?php echo $kurs->id; ?>">
+    					<button type="submit" name="delete_row" class="btn btn-danger">Löschen</button> <!-- bei betätigen des Buttons wird eine Abfrage 'Wirklich löschen' aufgerufen, falls bestätigt wird das Formular delete_row mit ID gesendet-->
+					</form>
+				</td>
+				<td>
+					<a href="http://testtest123hebamme.de/kurse-aendern?id=<?php echo $kurs->id; ?>">
+    					<button type="submit" name="kursdatenandern" class="btn btn-danger">Bearbeiten</button><!--Button Kursdaten ändern in neuer Seite, Abfrage von ID-->
+				</td>
+				<td>
+					<a href="http://testtest123hebamme.de/kursdaten?id=<?php echo $kurs->id; ?>">
+    					<button type="submit" name="kursdaten" class="btn btn-danger">Kurstermine</button><!-- Aufrufen von Kursdaten in neuer Seite-->
+				</td>
+				<td>
+					<a href="http://testtest123hebamme.de/kursanmeldungen?id=<?php echo $kurs->id; ?>">
+    					<button type="submit" name="kursanmeldungen" class="btn btn-danger">Anmeldungen</button><!-- Aufrufen von Kursanmeldungen in neuer Seite-->
+				</td>
+			</tr>
+		<?php } ?> 
+		
+	</tbody>
+</table>
